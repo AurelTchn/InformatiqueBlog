@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "538523609367",
+    "firebase_url": "https://testfirebase-ab7a2-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "testfirebase-ab7a2",
+    "storage_bucket": "testfirebase-ab7a2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:538523609367:android:56cde8753d9e6c5fefaf52",
+        "android_client_info": {
+          "package_name": "com.example.firebaseflutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF49o1DnKAUoBcBAEIwKeDB1nZhbqPSBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:538523609367:android:9f1b6cd38ff13100efaf52",
+        "android_client_info": {
+          "package_name": "com.example.informatiqueblog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF49o1DnKAUoBcBAEIwKeDB1nZhbqPSBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

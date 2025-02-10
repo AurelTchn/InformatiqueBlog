@@ -1,0 +1,10 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+  
+  background_image: "assets/images/blog_logo.jpg"
+  image: "assets/images/blog_logo.jpg"  # Ton logo
+  color: "#121212"  # Couleur de fond
+  branding: assets/images/texttechblog.jpeg  # Texte "Techblog" en bas
+  
