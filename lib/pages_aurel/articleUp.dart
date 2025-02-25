@@ -259,10 +259,97 @@ class _ModifyArticlesState extends State<ModifyArticles> {
             return;
           }
 
-          await FirebaseFirestore.instance
+          FirebaseFirestore firestore = FirebaseFirestore.instance;
+          // Supprimer l'article de la collection 'articles'
+          await firestore.collection('articles').doc(idArticle).delete();
+
+          // Récupérer tous les utilisateurs
+          QuerySnapshot usersSnapshot =
+              await firestore.collection('utilisateurs').get();
+
+          WriteBatch batch =
+              firestore.batch(); 
+
+          for (var userDoc in usersSnapshot.docs) {
+            String userId = userDoc.id;
+
+            // Supprimer dans favorite_articles
+            QuerySnapshot favoriteSnapshot = await firestore
+                .collection('utilisateurs')
+                .doc(userId)
+                .collection('favorite_articles')
+                .where('uid_article', isEqualTo: idArticle)
+                .get();
+
+            for (var favDoc in favoriteSnapshot.docs) {
+              batch.delete(favDoc.reference);
+            }
+
+            // Supprimer dans liked_articles
+            QuerySnapshot likesSnapshot = await firestore
+                .collection('utilisateurs')
+                .doc(userId)
+                .collection('liked_articles')
+                .where('uid_article', isEqualTo: idArticle)
+                .get();
+
+            for (var likeDoc in likesSnapshot.docs) {
+              batch.delete(likeDoc.reference);
+            }
+          }
+
+          // Appliquer toutes les suppressions en une seule requête
+          await batch.commit();
+
+          /* await FirebaseFirestore.instance
               .collection('articles')
               .doc(idArticle)
               .delete();
+
+          QuerySnapshot usersSnapshot =
+              await FirebaseFirestore.instance.collection('utilisateurs').get();
+
+          for (var userDoc in usersSnapshot.docs) {
+            String userId = userDoc.id;
+
+            // Référence à la sous-collection favorite_articles de cet utilisateur
+            CollectionReference favoriteArticlesRef = FirebaseFirestore.instance
+                .collection('utilisateurs')
+                .doc(userId)
+                .collection('favorite_articles');
+
+            // Récupérer tous les documents de la sous-collection
+            QuerySnapshot favoriteSnapshot = await favoriteArticlesRef.get();
+
+            for (var favDoc in favoriteSnapshot.docs) {
+              Map<String, dynamic> data = favDoc.data() as Map<String, dynamic>;
+
+              // Vérifier si le document contient 'articleId' et si sa valeur correspond à idArticle
+              if (data.containsKey('uid_article') &&
+                  data['uid_article'] == idArticle) {
+                await favoriteArticlesRef.doc(favDoc.id).delete();
+              }
+            }
+
+            // Référence à la sous-collection favorite_articles de cet utilisateur
+            CollectionReference likesArticlesRef = FirebaseFirestore.instance
+                .collection('utilisateurs')
+                .doc(userId)
+                .collection('liked_articles');
+
+            // Récupérer tous les documents de la sous-collection
+            QuerySnapshot likesSnapshot = await likesArticlesRef.get();
+
+            for (var likeDoc in likesSnapshot.docs) {
+              Map<String, dynamic> data = likeDoc.data() as Map<String, dynamic>;
+
+              // Vérifier si le document contient 'articleId' et si sa valeur correspond à idArticle
+              if (data.containsKey('uid_article') &&
+                  data['uid_article'] == idArticle) {
+                await likesArticlesRef.doc(likeDoc.id).delete();
+              }
+            }
+          } */
 
           await _load_articles();
 
@@ -475,98 +562,103 @@ class _ModifyArticlesState extends State<ModifyArticles> {
                               ),
                               ElevatedButton(
                                 onPressed: () {
-                                   showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return Dialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.warning_amber_rounded,
-                                                size: 50, color: Colors.red),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              "Supprimer l'article ?",
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: context
-                                                        .watch<ThemeProvider>()
-                                                        .isDark
-                                                    ? Colors.white
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              "Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  fontSize: 14,
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.warning_amber_rounded,
+                                                  size: 50, color: Colors.red),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                "Supprimer l'article ?",
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
                                                   color: context
                                                           .watch<
                                                               ThemeProvider>()
                                                           .isDark
                                                       ? Colors.white
-                                                      : Colors.black54),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                OutlinedButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  style:
-                                                      OutlinedButton.styleFrom(
-                                                    side: BorderSide(
-                                                        color: Colors.grey),
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8),
-                                                    ),
-                                                  ),
-                                                  child: Text("Annuler",
-                                                      style: TextStyle(
-                                                          color: Colors.grey)),
+                                                      : Colors.black87,
                                                 ),
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    _deleteArticles();
-                                                    Navigator.pop(context);
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor: Colors.red,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                "Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: context
+                                                            .watch<
+                                                                ThemeProvider>()
+                                                            .isDark
+                                                        ? Colors.white
+                                                        : Colors.black54),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  OutlinedButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    style: OutlinedButton
+                                                        .styleFrom(
+                                                      side: BorderSide(
+                                                          color: Colors.grey),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                      ),
                                                     ),
+                                                    child: Text("Annuler",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.grey)),
                                                   ),
-                                                  child: Text("Supprimer",
-                                                      style: TextStyle(
-                                                          color: Colors.white)),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      _deleteArticles();
+                                                      Navigator.pop(context);
+                                                    },
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                      ),
+                                                    ),
+                                                    child: Text("Supprimer",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white)),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                );
+                                      );
+                                    },
+                                  );
 
                                   //_deleteArticles();
                                 },
